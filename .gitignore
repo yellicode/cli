@@ -1,0 +1,7 @@
+#Npm modules
+node_modules/
+npm-debug.log.*
+
+#Custom generated output
+dist/
+*.tgz

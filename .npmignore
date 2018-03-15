@@ -1,0 +1,8 @@
+.vscode/*
+src
+!dist/*/src
+tsconfig.json
+*.npmignore
+*.ts
+!*.d.ts
+rollup.config.js

@@ -1,0 +1,31 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "build-es5",
+            "name": "Build and Launch",
+            "program": "${workspaceFolder}\\dist\\es5\\index"
+             ,"cwd": "D:\\Git\\CodeGen\\Src\\Packages\\docs" // <!-- set working dir here            
+            ,
+            "args": [
+                // "--log-level", "verbose"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch (no build)",
+            "program": "${workspaceFolder}\\dist\\es5\\index"
+            // ,"cwd": "" // <!-- set working dir here         
+            ,
+            "args": [
+                // "--log-level", "verbose"
+            ]
+        }
+    ]
+}
