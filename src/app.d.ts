@@ -8,14 +8,14 @@
 interface CodeGenTemplateConfig {
     templateFile: string;
     modelFile?: string;
-    debug: boolean;
+    debug?: boolean;
     templateArgs?: any;
 }
 
 interface CodeGenConfig {
     templates: CodeGenTemplateConfig[];
-    compileTypeScript: boolean;
-    typeScriptConfigFile: string;
+    compileTypeScript?: boolean;
+    typeScriptConfigFile?: string;
 }
 
 // TODO: delete these interfaces or update their names

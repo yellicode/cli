@@ -14,7 +14,7 @@ const chokidar = require('chokidar');
 import { Logger } from '@yellicode/core';
 import { FileSearch } from './file-search';
 import { TemplateRunner } from './template-runner';
-import * as Consts from './yellicode-constants';
+import * as consts from './yellicode-constants';
 import * as _ from 'lodash';
 import { ConfigStore } from './config-store';
 import { InputWatcher } from './input-watcher';
@@ -50,7 +50,7 @@ export class ConfigReader {
     }
 
     public readDirectory(dirName: string, recursive: boolean, autoRun: boolean, callback: (err: any) => void) {
-        FileSearch.findFiles(dirName, recursive, 'codegenconfig.json', (err: any, configFiles: string[] | null) => {
+        FileSearch.findFiles(dirName, recursive, consts.YELLICODE_CONFIG_FILE, (err: any, configFiles: string[] | null) => {
             if (err) {
                 throw err;
             }
@@ -72,7 +72,7 @@ export class ConfigReader {
                     configWatcher.on('unlink', (filePath: string) => { this.onConfigFileDeleted(filePath) });
                     // Also start watching the directory for new config files
                     // Create a glob-expression (https://en.wikipedia.org/wiki/Glob_(programming))
-                    var globExpression = recursive ? `${dirName}/**/codegenconfig.json` : path.join(dirName, 'codegenconfig.json');
+                    var globExpression = recursive ? `${dirName}/**/${consts.YELLICODE_CONFIG_FILE}`: path.join(dirName, consts.YELLICODE_CONFIG_FILE);
                     const newFileWatcher = chokidar.watch(globExpression, { persistent: true });
                     newFileWatcher.on('add', (path: string) => {
                         // We also get 'add' events for files that are already there, so check for duplicates.
@@ -160,7 +160,7 @@ export class ConfigReader {
                 originalTemplateFile: originalTemplateFileName,
                 requiresCompilation: isTypeScriptTemplate && shouldCompileTypeScript,
                 isCompiled: false,
-                debug: templateEntry.debug,
+                debug: templateEntry.debug || false,
                 templateArgs: templateEntry.templateArgs
             };
 
@@ -169,8 +169,8 @@ export class ConfigReader {
                 // Ensure a '.ymn' extension                    
                 let configuredModelPath: string = templateEntry.modelFile;
                 const modelExtension = path.extname(configuredModelPath);
-                if (!modelExtension || (modelExtension !== Consts.YELLICODE_DOCUMENT_EXTENSION && modelExtension !== '.json')) {
-                    configuredModelPath = configuredModelPath + Consts.YELLICODE_DOCUMENT_EXTENSION;
+                if (!modelExtension || (modelExtension !== consts.YELLICODE_DOCUMENT_EXTENSION && modelExtension !== '.json')) {
+                    configuredModelPath = configuredModelPath + consts.YELLICODE_DOCUMENT_EXTENSION;
                 }
                 // Make an absolute path
                 templateInfo.modelFile = path.join(dirName, configuredModelPath).toLowerCase();

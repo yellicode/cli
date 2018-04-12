@@ -15,9 +15,11 @@ import { TemplateRunner } from './template-runner';
 import { InputWatcher } from './input-watcher';
 import { ConfigReader } from './config-reader';
 import { Compiler } from './compiler';
+import { Initializer } from './initializer/initializer';
 
 const WATCH_PROCESS_ARG = '--watch';
 const WATCH_PROCESS_ARG_ALIAS = '-w';
+const INIT_PROCESS_ARG = 'init';
 
 const TEMPLATE_FILE_PROCESS_ARG = '--template';
 const TEMPLATE_FILE_PROCESS_ARG_ALIAS = '-t';
@@ -40,6 +42,11 @@ let watch = false;
  */
 let templateFileName: string;
 
+/**
+ * If true, don't run anything but the initializer.
+ */
+let initOnly: boolean = false;
+
 let logLevel = LogLevel.Info;
 const args = process.argv;
 
@@ -60,6 +67,9 @@ args.forEach((val, index, array) => {
             const logLevelString = array[index + 1].toLowerCase();
             logLevel = LogLevel.parse(logLevelString) || logLevel;
             break;        
+        case INIT_PROCESS_ARG:
+            initOnly = true;
+            break;
         default:
             break;
     }
@@ -100,8 +110,9 @@ function errorHandler(err: any) {
     logger.error(`An unhandler error has occured: ${err}.`);
 }
 
+const workingDirectory = path.resolve(".");
+
 function start() {
-    const workingDirectory = path.resolve(".");
     const recursive = false; // recursively searches the working dir for codegenconfig.json files. Enable if needed and when fully tested.    
     logger.info(`Yellicode is starting in working directory ${workingDirectory}.`);
     logger.verbose(`Template debugging: ${debugTemplate}. Watching: ${watch}.`);
@@ -125,4 +136,12 @@ function start() {
         }, errorHandler);
     });
 }
-start();
+
+if (initOnly) {
+    const initializer = new Initializer(logger);
+    initializer.run(workingDirectory).then(() => {
+        logger.info('Yellicode initialization finished. Run \'yellicode\' or \'yellicode --watch\' to start code generation.');
+        process.exit();
+    });
+}
+else start();

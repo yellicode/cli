@@ -9,22 +9,20 @@
             "request": "launch",
             "preLaunchTask": "build-es5",
             "name": "Build and Launch",
-            "program": "${workspaceFolder}\\dist\\es5\\index"
-             ,"cwd": "D:\\Git\\CodeGen\\Src\\Packages\\docs" // <!-- set working dir here            
-            ,
-            "args": [
-                // "--log-level", "verbose"
+            "program": "${workspaceFolder}\\dist\\es5\\index",
+            // "cwd": "", // <!-- set working dir here                        
+            "args": [                
+                "--log-level", "verbose"
             ]
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Launch (no build)",
-            "program": "${workspaceFolder}\\dist\\es5\\index"
-            // ,"cwd": "" // <!-- set working dir here         
-            ,
+            "program": "${workspaceFolder}\\dist\\es5\\index",
+            // "cwd": "", // <!-- set working dir here                        
             "args": [
-                // "--log-level", "verbose"
+                "--log-level", "verbose"
             ]
         }
     ]
