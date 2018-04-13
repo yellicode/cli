@@ -8,6 +8,7 @@
 import { InitConfig } from "./init-config";
 import * as path from 'path';
 import * as rl from 'readline';
+import { PathUtility } from "../path-utility";
 
 export class InitPrompt {
     public static PromptForConfig(config: InitConfig): Promise<InitConfig> {        
@@ -24,10 +25,9 @@ export class InitPrompt {
             })
             .then((templateFileName: string) => {       
                 if (templateFileName) config.templateFileName = templateFileName;
-                // console.log(`Using template ${config.templateFileName}`);
-                
-                // Ask for the output file name, but first set the default based on the previous answer                
-                config.outputFileName = path.parse(config.templateFileName).name + '-output.txt';
+                // console.log(`Using template ${config.templateFileName}`);                
+                // Ask for the output file name, but first set the default based on the previous answer        
+                config.outputFileName = PathUtility.removeTsExtension(config.templateFileName) + '-output.txt';
                 return InitPrompt.promptForString(`Output file: (${config.outputFileName})`);
             }).then((outputFileName: string) => {
                 if (outputFileName) config.outputFileName = outputFileName;

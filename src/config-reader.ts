@@ -18,6 +18,7 @@ import * as consts from './yellicode-constants';
 import * as _ from 'lodash';
 import { ConfigStore } from './config-store';
 import { InputWatcher } from './input-watcher';
+import { PathUtility } from './path-utility';
 
 // TODO: Promises, Promises<>...
 
@@ -72,7 +73,7 @@ export class ConfigReader {
                     configWatcher.on('unlink', (filePath: string) => { this.onConfigFileDeleted(filePath) });
                     // Also start watching the directory for new config files
                     // Create a glob-expression (https://en.wikipedia.org/wiki/Glob_(programming))
-                    var globExpression = recursive ? `${dirName}/**/${consts.YELLICODE_CONFIG_FILE}`: path.join(dirName, consts.YELLICODE_CONFIG_FILE);
+                    var globExpression = recursive ? `${dirName}/**/${consts.YELLICODE_CONFIG_FILE}` : path.join(dirName, consts.YELLICODE_CONFIG_FILE);
                     const newFileWatcher = chokidar.watch(globExpression, { persistent: true });
                     newFileWatcher.on('add', (path: string) => {
                         // We also get 'add' events for files that are already there, so check for duplicates.
@@ -148,7 +149,7 @@ export class ConfigReader {
             // UPDATE: try not to change the case of the originalTemplateFileName, so that the the compiler creates files with the same casing
             let originalTemplateFileName: string = path.join(dirName, configuredTemplatePath); // can be .ts or .js                
             // The templateFileName should always have a .js extension
-            const templateFileName: string = isTypeScriptTemplate ? originalTemplateFileName.replace('.ts', '.js') : originalTemplateFileName;
+            const templateFileName: string = isTypeScriptTemplate ? PathUtility.ensureJsExtension(originalTemplateFileName) : originalTemplateFileName;
             // If TS compilation is not enabled, don't deal with .ts files and always use the .js file (compilation is assumed to be done externally)
             if (isTypeScriptTemplate && !shouldCompileTypeScript) originalTemplateFileName = templateFileName;
 
@@ -174,11 +175,10 @@ export class ConfigReader {
                 }
                 // Make an absolute path
                 templateInfo.modelFile = path.join(dirName, configuredModelPath).toLowerCase();
-            }
-
+            }          
+            
             this.configStore.addTemplate(templateInfo);
-        }
-        );
+        });
 
         // Warn if TS files must be compiled but there are templates with no ts extension
         if (shouldCompileTypeScript) {

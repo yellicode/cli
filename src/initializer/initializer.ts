@@ -24,15 +24,7 @@ export class Initializer {
     }
 
     public run(workingDir: string): Promise<void> {
-        const baseName = path.basename(workingDir);
-
-        // const defaultConfig: InitConfig = {
-        //     modelName: 'metextensie.ymn', 
-        //     templateFileName: `zonderextensie`, 
-        //     outputFileName: `zomaariets.txt`};  
-
-        // Initializer.sanitizeConfig(defaultConfig);
-        // return this.runInternal(workingDir, defaultConfig);
+        const baseName = path.basename(workingDir);     
 
         const defaultConfig: InitConfig = {
             modelName: baseName,
@@ -40,18 +32,22 @@ export class Initializer {
             outputFileName: `${baseName}.template-output.txt`
         };
 
-
         return InitPrompt.PromptForConfig(defaultConfig).then(config => {
             Initializer.sanitizeConfig(config);
             return this.runInternal(workingDir, config);
         })
     }
 
-    private static sanitizeConfig(initConfig: InitConfig) {        
-        // Ensure no extension on the model name
-        initConfig.modelName = path.parse(initConfig.modelName).name;
+    private static sanitizeConfig(initConfig: InitConfig) {
+        // Ensure *no* extension on the model name        
+        if (initConfig.modelName.endsWith(consts.YELLICODE_DOCUMENT_EXTENSION)){
+            initConfig.modelName = initConfig.modelName.substring(0, initConfig.modelName.length - 4);
+        }
+        
         // Ensure a ts extension on the template name
-        initConfig.templateFileName = path.parse(initConfig.templateFileName).name + '.ts';
+        if (!initConfig.templateFileName.endsWith('.ts')) {
+            initConfig.templateFileName += '.ts';
+        }
     }
 
     private runInternal(workingDir: string, initConfig: InitConfig): Promise<void> {
@@ -70,9 +66,9 @@ export class Initializer {
                 return Initializer.createCodeGenConfigFile(workingDir, initConfig.templateFileName, modelFileName);
             })
             .then(() => {
-                this.logger.info(`Installing NPM packages...`);                
+                this.logger.info(`Installing NPM packages...`);
                 return this.npmInstaller.installDevPackages(workingDir, ['@yellicode/templating', '@yellicode/model']);
-            }) 
+            })
             .catch((err) => {
                 this.logger.error(err);
             });

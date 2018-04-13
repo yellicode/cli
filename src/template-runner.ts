@@ -15,6 +15,7 @@ import { Logger } from '@yellicode/core';
 import { Compiler } from "./compiler";
 import { TemplateProcess } from "./template-process";
 import { ConfigStore } from "./config-store";
+import { PathUtility } from "./path-utility";
 
 export class TemplateRunner {
     private runningTemplates: { [templateId: string]: ITemplateInfo } = {};
@@ -75,19 +76,7 @@ export class TemplateRunner {
         fileName = fileName.toLowerCase();
 
         // Ensure a .js extension, not .ts or anything else. This may be the case where fileName is passed as a command line argument.
-        const templateExtension = path.extname(fileName);
-        switch (templateExtension.toLowerCase()) {
-            case '.js': // the right extension
-                break;
-            case '': // no extension
-                fileName = fileName + '.js';
-                break;
-            case '.ts':
-                fileName = fileName.replace('.ts', '.js');
-                break;
-            default:
-                return Promise.reject(`Invalid template file '${fileName}'. Invalid file extension '${templateExtension}'.`);
-        }
+        fileName = PathUtility.ensureJsExtension(fileName);       
 
         // Lookup the template info
         var templateInfos = this.configStore.listAllTemplateUsingTemplateFile(fileName);
