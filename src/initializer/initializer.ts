@@ -99,13 +99,16 @@ import * as model from '@yellicode/model';
 Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, pack: model.Package) => {
     writer.writeLine(\`Output from template '${templateFileName}' with model '$\{pack.name\}', generated at $\{new Date().toISOString()\}.\`);
     writer.writeLine();
-    pack.getAllClasses().forEach((c) => {
-        writer.writeLine(\`Class $\{c.name\} has the following attributes:\`);
-        writer.increaseIndent();
-        c.ownedAttributes.forEach(att => {
-            writer.writeLine(\`- $\{att.name\} ($\{att.getTypeName()\})\`);
-        });
-        writer.decreaseIndent();
+    pack.getAllTypes().forEach((t) => {
+        writer.writeLine(\`Type $\{t.name\}: $\{t.getFirstCommentBody()\}\`);
+        if (model.isClass(t)) {
+            writer.increaseIndent();
+            writer.writeLine(\`Class $\{t.name\} has the following attributes:\`);
+            t.ownedAttributes.forEach(att => {
+                writer.writeLine(\`- $\{att.name\} ($\{att.getTypeName()\}): $\{att.getFirstCommentBody()\}\`);
+            });
+            writer.decreaseIndent();
+        }
     })
 });`;
 
