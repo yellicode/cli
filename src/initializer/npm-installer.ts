@@ -56,14 +56,10 @@ export class NpmInstaller {
 
 		const options = { silent: false, cwd: workingDir };
 		this.logger.verbose(`Executing npm command '${command}' in working directory ${workingDir}...`);
-		return new Promise<void>((resolve, reject) => {
-			// Using exec so that the process is launched with a shell (also requires the 'fix-path' package
-			// on macOS to avoid a 'command not found' error due to the $PATH not being inherited when running the packaged app).
-			// https://github.com/electron/electron/issues/7688
-			const child = childProcess.exec(command, options, (error, stdout, stderr) => {
-                // TODO: inject some logger
+		return new Promise<void>((resolve, reject) => {			
+			const child = childProcess.exec(command, options, (error, stdout, stderr) => {                
                 if (stdout) this.logger.info(stdout);
-				if (stderr) this.logger.error(stderr);
+				if (stderr) this.logger.info(stderr); // we can get WARN and ERROR from stderr
 				if (error !== null) {
 					reject(`Npm command '${command}' has failed. ${error}.`);
 				}

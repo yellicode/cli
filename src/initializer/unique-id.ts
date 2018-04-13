@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { v4 as uuid } from 'node-uuid';
+import { v4 as uuid } from 'uuid'; // 'uuid' is awesome: https://www.npmjs.com/package/uuid
 import * as os from 'os';
 
 const HEX_LIST = '0123456789abcdef';
@@ -17,7 +17,7 @@ export class UniqueId {
     static isLittleEndian = os.endianness() === 'LE';
 
     public static create(): string {                
-        const guid = uuid(); // Credits: https://github.com/kelektiv/node-uuid
+        const guid = uuid(); 
         let encoded = UniqueId.guidToBase64(guid, UniqueId.isLittleEndian);
         // Modify for use in a URL https://en.wikipedia.org/wiki/Base64#URL_applications
 		encoded = encoded.replace("/", "_").replace("+", "-");
