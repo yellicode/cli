@@ -23,7 +23,7 @@ export class TemplateProcess {
      */
     private generateCount: number = 0;
 
-    constructor(private fileName: string, private model: any, private logger: Logger, private enableDebugging: boolean, private templateArgs:any) {
+    constructor(private fileName: string, private modelData: any, private logger: Logger, private enableDebugging: boolean, private templateArgs:any) {
 
     }
 
@@ -76,10 +76,10 @@ export class TemplateProcess {
                     case 'getModel':
                         this.hasTemplateActivity = true;
                         // The template requested the configured model. If there is one, it is already loaded (and cached) at this point.
-                        if (this.model == null) {
+                        if (this.modelData == null) {
                             this.logger.warn(`Template '${this.fileName}' has no configured model. Please check the code generation config.`);
                         }
-                        let setModelMessage: ISetModelMessage = { cmd: 'setModel', modelData: this.model };
+                        let setModelMessage: ISetModelMessage = { cmd: 'setModel', modelData: this.modelData };
                         templateProcess.send(setModelMessage);
                         break;
                     default:
