@@ -67,7 +67,7 @@ export class Initializer {
             })
             .then(() => {
                 this.logger.info(`Installing NPM packages...`);
-                return this.npmInstaller.installDevPackages(workingDir, ['@yellicode/templating', '@yellicode/model']);
+                return this.npmInstaller.installDevPackages(workingDir, ['@yellicode/templating', '@yellicode/elements']);
             })
             .catch((err) => {
                 this.logger.error(err);
@@ -94,14 +94,14 @@ export class Initializer {
 
         // Note: escape a `, { and } as \`, \{ and \} respectively
         const template = `import { Generator, TextWriter } from '@yellicode/templating';
-import * as model from '@yellicode/model';
+import * as elements from '@yellicode/elements';
         
-Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, pack: model.Package) => {
-    writer.writeLine(\`Output from template '${templateFileName}' with model '$\{pack.name\}', generated at $\{new Date().toISOString()\}.\`);
+Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, model: elements.Model) => {
+    writer.writeLine(\`Output from template '${templateFileName}' with model '$\{model.name\}', generated at $\{new Date().toISOString()\}.\`);
     writer.writeLine();
-    pack.getAllTypes().forEach((t) => {
+    model.getAllTypes().forEach((t) => {
         writer.writeLine(\`Type $\{t.name\}: $\{t.getFirstCommentBody()\}\`);
-        if (model.isClass(t)) {
+        if (elements.isClass(t)) {
             writer.increaseIndent();
             writer.writeLine(\`Class $\{t.name\} has the following attributes:\`);
             t.ownedAttributes.forEach(att => {
