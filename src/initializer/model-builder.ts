@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import * as model from "../data-interfaces";
-import { UniqueId } from './unique-id';
+import * as model from '../data-interfaces';
+import { UniqueId } from '@yellicode/core'; 
 
 export class ModelBuilder {
     public static buildSampleModel(modelName: string): model.DocumentData {
