@@ -20,52 +20,35 @@ import { ConfigStore } from './config-store';
 import { InputWatcher } from './input-watcher';
 import { PathUtility } from './path-utility';
 
-// TODO: Promises, Promises<>...
-
 export class ConfigReader {
 
     constructor(private configStore: ConfigStore, private inputWatcher: InputWatcher, private templateRunner: TemplateRunner, private logger: Logger, private watchFiles: boolean) {
 
     }
 
-    private readFile(fileName: string, isFirstTime: boolean, autoRun: boolean, callback?: (err: any) => void) {
+    private readFile(fileName: string, isFirstTime: boolean, autoRun: boolean): Promise<void> {
         if (!fs.existsSync(fileName)) {
-            throw 'CodeGen: configuration file not found.';
+            return Promise.reject(`Configuration file '${fileName}' not found.`);
         }
 
-        fs.readFile(fileName, 'utf8', (err: any, text: string) => {
-            if (err) {
-                console.error('CodeGen: Error reading config file: %s', err);
-            } else {
-                try {
-                    this.onConfigFileRead(text, fileName, isFirstTime, autoRun);
-                } catch (e) {
-                    err = `Error parsing config file ${fileName}: ${e}.`;
-                    // this._logger.error();
+        return new Promise((resolve, reject) => {
+            fs.readFile(fileName, 'utf8', (err: any, fileContents: string) => {
+                if (err) {
+                    return reject(`Error reading configuration file '${fileName}': ${err}`);
                 }
-            }
-            if (callback) {
-                callback(err);
-            }
+                try {
+                    this.onConfigFileRead(fileContents, fileName, isFirstTime, autoRun);
+                    resolve();
+                } catch (e) {
+                    reject(`Error parsing config file ${fileName}: ${e}.`);
+                }
+            });
         });
-    }
+    }    
 
-    public readDirectory(dirName: string, recursive: boolean, autoRun: boolean, callback: (err: any) => void) {
-        FileSearch.findFiles(dirName, recursive, consts.YELLICODE_CONFIG_FILE, (err: any, configFiles: string[] | null) => {
-            if (err) {
-                throw err;
-            }
-            if (!configFiles || configFiles.length === 0) {
-                this.logger.warn(`No config files found in directory '${dirName}'.`);
-                return callback(null);
-            }
-
-            this.logger.verbose(`Found ${configFiles.length} config files in directory '${dirName}'.`);
-            this.logger.verbose(`Config files: ${configFiles.join(', ')}`);
-            var numberOfFilesToRead: number = configFiles.length;
-
-            // Called when the loop below has finished
-            var onAllFilesRead = () => {
+    public readDirectory(dirName: string, recursive: boolean, autoRun: boolean): Promise<void> {
+        return this.readDirectoryInternal(dirName, recursive, autoRun)
+            .then((configFiles: string[]) => {
                 if (this.watchFiles) {
                     // Watch all config files for changes
                     const configWatcher = chokidar.watch(configFiles, { persistent: true });
@@ -79,38 +62,53 @@ export class ConfigReader {
                         // We also get 'add' events for files that are already there, so check for duplicates.
                         if (configFiles!.indexOf(path) === -1) {
                             this.logger.info(`Config file '${path}' has been added`);
-                            this.readFile(path, true, autoRun, () => {
-                                // Even watch te file in case of errors, the user may fix it
-                                configWatcher.add(path);
-                            });
+                            this.readFile(path, true, autoRun)
+                                .catch((err) => {
+                                    // Even watch te file in case of errors, the user may fix it                                
+                                    this.logger.error(err);
+                                })
+                                .then(() => {
+                                    configWatcher.add(path);
+                                });
                         }
                     });
                 }
-
-                // And call back
-                callback(null);
-            };
-
-            // Load each file
-            configFiles.forEach(filePath => {
-                this.readFile(filePath,
-                    true,
-                    autoRun,
-                    (err) => {
-                        if (err)
-                            throw err; // todo: Promises, promises
-
-                        numberOfFilesToRead--;
-                        if (numberOfFilesToRead <= 0 && callback) {
-                            onAllFilesRead();
-                        }
-                    });
             });
-        });
     }
 
-    private onConfigFileRead(text: string, configFileName: string, isFirstTime: boolean, autoRun: boolean) {
-        const config: CodeGenConfig = jsonparser.parse(text, null, true); // parse... true to remove comments
+    private readDirectoryInternal(dirName: string, recursive: boolean, autoRun: boolean): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+            FileSearch.findFiles(dirName, recursive, consts.YELLICODE_CONFIG_FILE, (err: any, configFiles: string[] | null) => {
+                if (err) {
+                    return reject(err);
+                }
+                if (!configFiles || configFiles.length === 0) {
+                    this.logger.warn(`No config files found in directory '${dirName}'.`);
+                    return resolve(configFiles || []);
+                }
+    
+                this.logger.verbose(`Found ${configFiles.length} config files in directory '${dirName}'.`);
+                this.logger.verbose(`Config files: ${configFiles.join(', ')}`);
+                var numberOfFilesToRead: number = configFiles.length;
+                configFiles.forEach(filePath => {
+                    this.readFile(filePath, true, autoRun)
+                        .catch((err) => {
+                            // Log the error and continue
+                            this.logger.error(err);
+                        })
+                        .then(() => {
+                            numberOfFilesToRead--;
+                            if (numberOfFilesToRead <= 0) {
+                                resolve(configFiles);
+                            }
+                        });
+                });            
+            });
+        })      
+    }
+
+    private onConfigFileRead(fileContents: string, configFileName: string, isFirstTime: boolean, autoRun: boolean) {        
+        const config: CodeGenConfig = jsonparser.parse(fileContents, null, true); // parse... true to remove comments
         if (!config || !config.templates)
             return;
 
@@ -258,7 +256,10 @@ export class ConfigReader {
 
     private onConfigFileChanged(filePath: string) {
         this.logger.info(`Config file ${filePath} has changed. Reloading...`);
-        this.readFile(filePath, false, true);
+        this.readFile(filePath, false, true)
+            .catch((err) => {
+                this.logger.error(err);
+            });
     }
 
     private onConfigFileDeleted(filePath: string) {

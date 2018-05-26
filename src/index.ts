@@ -108,6 +108,7 @@ const configReader: ConfigReader = new ConfigReader(configStore, inputWatcher, t
 
 function errorHandler(err: any) {
     logger.error(`An unhandler error has occured: ${err}.`);
+    process.exit(); 
 }
 
 const workingDirectory = path.resolve(".");
@@ -117,24 +118,23 @@ function start() {
     logger.info(`Yellicode is starting in working directory ${workingDirectory}.`);
     logger.verbose(`Template debugging: ${debugTemplate}. Watching: ${watch}.`);
 
-    configReader.readDirectory(workingDirectory, recursive, false /*autorun is only on when a config file changes*/, (err: any) => {
-        if (err) {
-            throw err;
-        }
-
-        if (templateFileName) {
-            templateRunner.runTemplatesUsingTemplateFile(templateFileName, true).then(() => {
-                process.exit(); // not watching, so exit
+    configReader.readDirectory(workingDirectory, recursive, false)
+        .then(() => {
+            if (templateFileName) {
+                templateRunner.runTemplatesUsingTemplateFile(templateFileName, true).then(() => {
+                    process.exit(); // not watching, so exit
+                }, errorHandler);
+            }
+            else if (watch && !debugTemplate) {
+                templateRunner.runAll().catch(errorHandler);
+            }
+            else templateRunner.runAll().then(() => {
+                process.exit(); // not watching, so exit            
             }, errorHandler);
-        }
-        else if (watch && !debugTemplate) {
-            templateRunner.runAll()
-                .catch(errorHandler);
-        }
-        else templateRunner.runAll().then(() => {
-            process.exit(); // not watching, so exit            
-        }, errorHandler);
-    });
+        })
+        .catch((err) => {
+            logger.error(err);
+        });
 }
 
 if (initOnly) {
