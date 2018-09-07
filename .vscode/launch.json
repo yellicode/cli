@@ -10,10 +10,9 @@
             "preLaunchTask": "build-es5",
             "name": "Build and Launch",
             "program": "${workspaceFolder}\\dist\\es5\\index",
-             "cwd": "D:\\Yellicode\\Bookstore Tutorial Test\\bookstore_tutorial_p2\\bookstore_tutorial_p2\\CodeGen", // <!-- set working dir here                        
-            "args": [ 
-                "--watch",               
-                "--log-level", "info"
+            "cwd": "", // <!-- set working dir here                        
+            "args": [                  
+                "--log-level", "verbose"
             ]
         },
         {
@@ -21,7 +20,7 @@
             "request": "launch",
             "name": "Launch (no build)",
             "program": "${workspaceFolder}\\dist\\es5\\index",
-            "cwd": "D:\\Yellicode\\Bookstore Tutorial Test\\bookstore_tutorial_p2\\bookstore_tutorial_p2\\CodeGen", // <!-- set working dir here                        
+            "cwd": "", // <!-- set working dir here                        
             "args": [
                 "--log-level", "verbose"
             ]
