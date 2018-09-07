@@ -1,6 +1,6 @@
 {
   "name": "@yellicode/cli",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "CLI for Yellicode - an extensible code generator.",
   "keywords": [
     "code generator",
