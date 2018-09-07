@@ -5,26 +5,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-const childProcess = require('child_process');
-const path = require('path');
+import * as childProcess from 'child_process';
+import * as path from 'path';
+import * as semver from 'semver';
 
 import { Logger } from '@yellicode/core';
 import { IProcessMessage, ISetModelMessage } from '@yellicode/core';
 
 const PROCESS_START_TIMEOUT = 5000;
 const ACTIVE_PROCESS_POLL_INTERVAL = 3000;
+const DEFAULT_DEBUG_PORT_LEGACY = 5858;
+const DEFAULT_DEBUG_PORT_INSPECTOR = 9229;
 
 export class TemplateProcess {
-
+    private static useLegacyDebugProtocol: boolean;
     private static debugPort: number = 5858; // the default debug port
     private hasTemplateActivity: boolean = false;
+
     /**
      * Reference counter for the number of active "generate(..)" or "generateFromModel(..)" calls in the template.
      */
     private generateCount: number = 0;
 
-    constructor(private fileName: string, private modelData: any, private logger: Logger, private enableDebugging: boolean, private templateArgs:any) {
+    constructor(private fileName: string, private modelData: any, private logger: Logger, private enableDebugging: boolean, private templateArgs: any) {
 
+    }
+
+    static initialise() {        
+        // The legacy debugger has been deprecated as of Node 7.7.0 (https://nodejs.org/en/docs/guides/debugging-getting-started/).
+        // The inspector protocol is supported as of Node >= 6.3, but only v6.14.2 understands the --inspect-brk flag.
+        if (semver.lt(process.version, '6.14.2')) {
+            TemplateProcess.debugPort = DEFAULT_DEBUG_PORT_LEGACY;
+            TemplateProcess.useLegacyDebugProtocol = true;
+        }
+        else {
+            TemplateProcess.debugPort = DEFAULT_DEBUG_PORT_INSPECTOR;
+            TemplateProcess.useLegacyDebugProtocol = false;
+        }
     }
 
     public run(): Promise<void> {
@@ -119,21 +136,44 @@ export class TemplateProcess {
         if (this.enableDebugging) {
             // If this process is in debug mode, the forked process will also use process.execArgv - and the same debug port 5858 -. This would result
             // in a "childprocess.fork EADDRINUSE :::5858." So, for debug mode we need to assign a port for each child process.
-            var debugPort = ++TemplateProcess.debugPort;
-            execArgv.push(`--debug-brk=${debugPort}`); // debug-brk stops the process at the first line until a debugger is attached            
-            this.logger.info(`Waiting for debugger to attach on port ${debugPort}...`);
-            // console.log(`In Visual Studio 2015 or later, press CTRL+ALT+P, select Node.js remote debugging and use qualifier tcp://localhost:${debugPort}#ping=0`);
-            // console.log(`In Visual Studio Code, start debugging (type: 'node') using request type 'attach' and set the port to ${debugPort}.`);
+            const debugArg = this.getDebugProcessArg();
+            execArgv.push(debugArg);            
         }
         // Determine the working directory of the template process. This must be the directory in which the template resides, so that
         // paths relative to the template are resolved correctly.
         const workingDir = path.dirname(this.fileName);
         const options = { env: process.env, silent: false, execArgv: execArgv, cwd: workingDir };
-        const processArgs: string[] = [];                
+        const processArgs: string[] = [];
         if (this.templateArgs) {
             processArgs.push('--templateArgs');
             processArgs.push(JSON.stringify(this.templateArgs));
-        }        
+        }
         return childProcess.fork(this.fileName, processArgs, options);
     }
+
+    private getDebugProcessArg(): string {        
+        const debugPort = ++TemplateProcess.debugPort;
+        let arg: string;
+
+        // The inspector protocol is supported as of Node >= 6.3.
+        // The legacy debugger has been deprecated as of Node 7.7.0 (https://nodejs.org/en/docs/guides/debugging-getting-started/).
+        // 'debug-brk' and 'inspect-brk' stops the process at the first line until a debugger is attached  
+        if (TemplateProcess.useLegacyDebugProtocol) {
+            // legacy: the original V8 Debugger Protocol 
+            this.logger.warn(`Using the legacy V8 debugger protocol because the current node.js version is ${process.version}.`);
+            arg = `--debug-brk=${debugPort}`; 
+        }
+        else {
+            // inspector: the new V8 Inspector Protocol
+            arg = `--inspect-brk=${debugPort}`;
+        }
+
+        this.logger.info(`Waiting for debugger to attach on port ${debugPort}...`);
+        // console.log(`In Visual Studio 2015 or later, press CTRL+ALT+P, select Node.js remote debugging and use qualifier tcp://localhost:${debugPort}#ping=0`);
+        // console.log(`In Visual Studio Code, start debugging (type: 'node') using request type 'attach' and set the port to ${debugPort}.`);
+        return arg;
+    }
 }
+
+// Start static initialization
+TemplateProcess.initialise();
