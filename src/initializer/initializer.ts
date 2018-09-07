@@ -9,7 +9,6 @@ import * as path from 'path';
 import * as fs from "fs";
 
 import { Logger } from '@yellicode/core';
-import * as model from "../data-interfaces";
 import * as consts from '../yellicode-constants';
 import { NpmInstaller } from './npm-installer';
 import { ModelBuilder } from './model-builder';
@@ -24,7 +23,7 @@ export class Initializer {
     }
 
     public run(workingDir: string): Promise<void> {
-        const baseName = path.basename(workingDir);     
+        const baseName = path.basename(workingDir);
 
         const defaultConfig: InitConfig = {
             modelName: baseName,
@@ -40,10 +39,10 @@ export class Initializer {
 
     private static sanitizeConfig(initConfig: InitConfig) {
         // Ensure *no* extension on the model name        
-        if (initConfig.modelName.endsWith(consts.YELLICODE_DOCUMENT_EXTENSION)){
+        if (initConfig.modelName.endsWith(consts.YELLICODE_DOCUMENT_EXTENSION)) {
             initConfig.modelName = initConfig.modelName.substring(0, initConfig.modelName.length - 4);
         }
-        
+
         // Ensure a ts extension on the template name
         if (!initConfig.templateFileName.endsWith('.ts')) {
             initConfig.templateFileName += '.ts';
@@ -51,14 +50,23 @@ export class Initializer {
     }
 
     private runInternal(workingDir: string, initConfig: InitConfig): Promise<void> {
+        // A modelName without a .json extension becomes a Yellicode model.
+        // Otherwise it becomes a plain JSON document.
+        const isJsonModel = initConfig.modelName.endsWith('.json');
+        const modelFileName = isJsonModel ?
+            initConfig.modelName :
+            initConfig.modelName + consts.YELLICODE_DOCUMENT_EXTENSION;
+
         // Create a model file
-        const modelFileName = initConfig.modelName + consts.YELLICODE_DOCUMENT_EXTENSION;
         this.logger.info(`Creating model ${modelFileName}...`);
-        return Initializer.createModelFile(workingDir, modelFileName)
+        return Initializer.createModelFile(workingDir, modelFileName, isJsonModel)
             .then(() => {
                 // Create a template file
                 this.logger.info(`Creating template ${initConfig.templateFileName}...`);
-                return Initializer.createTemplateFile(workingDir, initConfig.templateFileName, initConfig.outputFileName);
+
+                return isJsonModel ? 
+                    Initializer.createTemplateFileForJsonModel(workingDir, initConfig.templateFileName, initConfig.outputFileName, modelFileName) :
+                    Initializer.createTemplateFile(workingDir, initConfig.templateFileName, initConfig.outputFileName);
             })
             .then(() => {
                 // Create a codegenconfig.json file
@@ -66,8 +74,12 @@ export class Initializer {
                 return Initializer.createCodeGenConfigFile(workingDir, initConfig.templateFileName, modelFileName);
             })
             .then(() => {
-                this.logger.info(`Installing NPM packages...`);
-                return this.npmInstaller.installDevPackages(workingDir, ['@yellicode/templating', '@yellicode/elements']);
+                const dependencies: string[] = ['@yellicode/templating'];
+                if (!isJsonModel){
+                    dependencies.push('@yellicode/elements');
+                }
+                this.logger.info(`Installing NPM packages (${dependencies.join(', ')})...`);
+                return this.npmInstaller.installDevPackages(workingDir, dependencies);
             })
             .catch((err) => {
                 this.logger.error(err);
@@ -75,9 +87,16 @@ export class Initializer {
 
     }
 
-    private static createModelFile(workingDir: string, modelFileName: string): Promise<void> {
-        const modelName = path.basename(modelFileName, consts.YELLICODE_DOCUMENT_EXTENSION);
-        const document = ModelBuilder.buildSampleModel(modelName);
+    private static createModelFile(workingDir: string, modelFileName: string, isJsonModel: boolean): Promise<void> {
+        let document: any;
+
+        if (isJsonModel) {
+            document = {};
+        }
+        else {
+            const modelName = path.basename(modelFileName, consts.YELLICODE_DOCUMENT_EXTENSION);
+            document = ModelBuilder.buildSampleModel(modelName);
+        }
 
         const fullFileName = path.join(workingDir, modelFileName);
         return new Promise<void>((resolve, reject) => {
@@ -88,6 +107,25 @@ export class Initializer {
                 else resolve();
             });
         });
+    }
+
+    private static createTemplateFileForJsonModel(workingDir: string, templateFileName: string, outputFileName: string, modelFileName: string): Promise<void> {
+  // Note: escape a `, { and } as \`, \{ and \} respectively
+  const template = `import { Generator, TextWriter } from '@yellicode/templating';  
+          
+Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, model: any) => {
+    writer.writeLine(\`Output from template '${templateFileName}' with JSON model '${modelFileName}', generated at $\{new Date().toISOString()\}.\`);      
+});`;
+  
+          const fullFileName = path.join(workingDir, `${templateFileName}`);
+          return new Promise<void>((resolve, reject) => {
+              fs.writeFile(fullFileName, template, (err) => {
+                  if (err) {
+                      reject(err);
+                  }
+                  else resolve();
+              });
+          });
     }
 
     private static createTemplateFile(workingDir: string, templateFileName: string, outputFileName: string): Promise<void> {
@@ -142,6 +180,4 @@ Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: Text
             });
         });
     }
-
-
 }
