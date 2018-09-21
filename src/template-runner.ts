@@ -128,6 +128,11 @@ export class TemplateRunner {
             }
         });
 
+        if (templatesToRun.length === 0) {
+            // All templates are already running. This might happen if multiple file changes 
+            // are triggered within a very short timespan.
+            return Promise.resolve();
+        }
 
         return this.compileTemplates(templatesToRun, compilationConfig)
             .then((result: ICompileResult) => {
