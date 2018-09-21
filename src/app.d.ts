@@ -10,6 +10,7 @@ interface CodeGenTemplateConfig {
     modelFile?: string;
     debug?: boolean;
     templateArgs?: any;    
+    disable?: boolean;
     outputMode?: 'overwrite' | 'once' | 'append';
 }
 

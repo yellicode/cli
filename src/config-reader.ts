@@ -121,8 +121,16 @@ export class ConfigReader {
         this.configStore.removeTemplates(configFileName);
         config.templates.forEach((templateEntry: CodeGenTemplateConfig, index: number) => {
             let configuredTemplatePath: string = templateEntry.templateFile;
-            if (!configuredTemplatePath || configuredTemplatePath.length === 0)
+            if (!configuredTemplatePath || configuredTemplatePath.length === 0){
+                this.logger.warn(`Template ${index} has no configured template file and will be ignored.`)
                 return;
+            }
+
+            if (templateEntry.disable === true){
+                // The template is temporarily disabled. Skip it entirely.
+                this.logger.info(`Template '${configuredTemplatePath}' is disabled and will be ignored.`);
+                return;
+            }
 
             // Compile TypeScript?
             let isTypeScriptTemplate: boolean = false;
