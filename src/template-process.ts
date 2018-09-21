@@ -27,7 +27,7 @@ export class TemplateProcess {
      */
     private generateCount: number = 0;
 
-    constructor(private fileName: string, private modelData: any, private logger: Logger, private enableDebugging: boolean, private templateArgs: any) {
+    constructor(private fileName: string, private modelData: any, private logger: Logger, private enableDebugging: boolean, private templateArgs: any, private outputMode?: string) {
 
     }
 
@@ -147,6 +147,10 @@ export class TemplateProcess {
         if (this.templateArgs) {
             processArgs.push('--templateArgs');
             processArgs.push(JSON.stringify(this.templateArgs));
+        }        
+        if (this.outputMode){
+            processArgs.push('--outputMode');
+            processArgs.push(this.outputMode);
         }
         return childProcess.fork(this.fileName, processArgs, options);
     }

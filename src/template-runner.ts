@@ -223,7 +223,7 @@ export class TemplateRunner {
             return Promise.reject(`Template file '${fileName}' not found.`);
         }
 
-        const templateProcess = new TemplateProcess(fileName, model, this.logger, this.enableDebugging, templateInfo.templateArgs);
+        const templateProcess = new TemplateProcess(fileName, model, this.logger, this.enableDebugging, templateInfo.templateArgs, templateInfo.outputMode);
         this.logger.verbose(`Running template '${fileName}'...`);
         return templateProcess.run();
     }

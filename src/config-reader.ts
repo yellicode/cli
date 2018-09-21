@@ -160,7 +160,8 @@ export class ConfigReader {
                 requiresCompilation: isTypeScriptTemplate && shouldCompileTypeScript,
                 isCompiled: false,
                 debug: templateEntry.debug || false,
-                templateArgs: templateEntry.templateArgs
+                templateArgs: templateEntry.templateArgs,
+                outputMode: templateEntry.outputMode
             };
 
             // Get the model file (optional)

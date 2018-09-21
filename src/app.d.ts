@@ -9,7 +9,8 @@ interface CodeGenTemplateConfig {
     templateFile: string;
     modelFile?: string;
     debug?: boolean;
-    templateArgs?: any;
+    templateArgs?: any;    
+    outputMode?: 'overwrite' | 'once' | 'append';
 }
 
 interface CodeGenConfig {
@@ -62,6 +63,11 @@ interface ITemplateInfo {
      * Contains any custom arguments that must be parsed to the template.
      */
     templateArgs?: any;
+
+    /**
+     * The output configured output mode. This value will be passed as-is to the template process.
+     */
+    outputMode?: string;
 }
 
 interface ITemplateCompilationConfig {
