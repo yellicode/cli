@@ -164,12 +164,10 @@ export class TemplateRunner {
         const templateLoggingInfo = templateFiles.length === 1 ? `template file '${templateFiles[0]}'` : `${templateFiles.length} template files`;
         const tsConfigPath = typeScriptConfig.typeScriptConfigFile;        
         if (tsConfigPath != null && fs.existsSync(tsConfigPath)) {
-            this.logger.info(`Compiling ${templateLoggingInfo} using TypeScript configuration ${tsConfigPath}...`);
-            this.logger.verbose(templateFiles.join(', '));
+            this.logger.info(`Compiling ${templateLoggingInfo} using TypeScript configuration ${tsConfigPath}...`);            
             compilerPromise = this.compiler.compileWithTsConfigFile(templateFiles, tsConfigPath);
         } else {
-            this.logger.info(`Compiling ${templateLoggingInfo} using default TypeScript configuration...`);
-            this.logger.verbose(templateFiles.join(', '));
+            this.logger.info(`Compiling ${templateLoggingInfo} using default TypeScript configuration...`);            
             compilerPromise = this.compiler.compile(templateFiles);
         }
         return compilerPromise.then((result) => {

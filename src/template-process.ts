@@ -13,7 +13,7 @@ import { Logger } from '@yellicode/core';
 import { IProcessMessage, ISetModelMessage } from '@yellicode/core';
 
 const PROCESS_START_TIMEOUT = 5000;
-const ACTIVE_PROCESS_POLL_INTERVAL = 3000;
+const ACTIVE_PROCESS_POLL_INTERVAL = 500;
 const DEFAULT_DEBUG_PORT_LEGACY = 5858;
 const DEFAULT_DEBUG_PORT_INSPECTOR = 9229;
 
@@ -72,6 +72,12 @@ export class TemplateProcess {
                 }
             });
 
+            templateProcess.on('disconnect', () => {
+                // The process has disconnected. Most likely because we disconnected in manageActiveProcess().
+                this.logger.verbose(`Template process for '${this.fileName}' has disconnected.`);             
+                resolve();
+            });
+
             templateProcess.on('message', (m: IProcessMessage) => {
                 if (!this.hasTemplateActivity) {
                     // We (most likely) received a 'processStarted' message. This message is sent when the single-instance Generator is created by the template process.
@@ -113,6 +119,7 @@ export class TemplateProcess {
         }
         // Monitor the child process.            
         var intervalId = setInterval(() => {
+            // this.logger.verbose(`Checking child process for template '${this.fileName}'. Connected ${templateProcess.connected}, generateCount: ${this.generateCount}`);
             if (!templateProcess.connected) {
                 clearInterval(intervalId); // the process has already stopped
                 return;
@@ -121,10 +128,9 @@ export class TemplateProcess {
             let shouldDisconnect = this.generateCount === 0;
             if (shouldDisconnect) {
                 if (templateProcess.connected) {
-                    templateProcess.disconnect();
+                    templateProcess.disconnect(); // this will trigger a 'disconnect' event that we handle in run()
                 }
-                clearInterval(intervalId);
-                this.logger.verbose(`Disconnected child process for template '${this.fileName}'.`);
+                clearInterval(intervalId);               
             }
         }, ACTIVE_PROCESS_POLL_INTERVAL);
     }
