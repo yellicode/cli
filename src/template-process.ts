@@ -48,7 +48,7 @@ export class TemplateProcess {
         const templateProcess = this.createTemplateProcess();
 
         // Give the process some time to get started. For example, the timeout will expire if the user never imports the Generator at all.
-        if (!this.enableDebugging) {
+        if (!this.enableDebugging) { // when debugging, the user needs time to attach to the child process   
             setTimeout(() => {
                 if (this.hasTemplateActivity || !templateProcess.connected)
                     return;
@@ -84,7 +84,7 @@ export class TemplateProcess {
                     // It is exported as a single instance by the templating package so we should receive it only once.                    
                     this.logger.verbose(`Template process for '${this.fileName}' has started.`);
                     this.hasTemplateActivity = true;
-                    this.manageActiveProcess(templateProcess);
+                    this.monitorActiveTemplateProcess(templateProcess);
                 }
                 switch (m.cmd) {
                     case 'generateStarted':
@@ -112,11 +112,7 @@ export class TemplateProcess {
         });
     }
 
-    private manageActiveProcess(templateProcess: any): void {
-        if (this.enableDebugging) {
-            // never disconnect while user is debugging
-            return;
-        }
+    private monitorActiveTemplateProcess(templateProcess: any): void {                
         // Monitor the child process.            
         var intervalId = setInterval(() => {
             // this.logger.verbose(`Checking child process for template '${this.fileName}'. Connected ${templateProcess.connected}, generateCount: ${this.generateCount}`);
@@ -137,8 +133,7 @@ export class TemplateProcess {
 
     private createTemplateProcess(): any {
         var execArgv = [];
-
-        // console.log(`CodeGen: Working dir for template ${fileName} is ${workingDir}.`);
+        
         if (this.enableDebugging) {
             // If this process is in debug mode, the forked process will also use process.execArgv - and the same debug port 5858 -. This would result
             // in a "childprocess.fork EADDRINUSE :::5858." So, for debug mode we need to assign a port for each child process.
