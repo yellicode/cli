@@ -20,7 +20,8 @@ const DEFAULT_DEBUG_PORT_INSPECTOR = 9229;
 export class TemplateProcess {
     private static useLegacyDebugProtocol: boolean;
     private static debugPort: number = 5858; // the default debug port
-    private hasTemplateActivity: boolean = false;
+    private hasSeenProcessMessages: boolean = false;
+    private hasGeneratorActivity: boolean = false;
 
     /**
      * Reference counter for the number of active "generate(..)" or "generateFromModel(..)" calls in the template.
@@ -50,7 +51,7 @@ export class TemplateProcess {
         // Give the process some time to get started. For example, the timeout will expire if the user never imports the Generator at all.
         if (!this.enableDebugging) { // when debugging, the user needs time to attach to the child process   
             setTimeout(() => {
-                if (this.hasTemplateActivity || !templateProcess.connected)
+                if ((this.hasSeenProcessMessages && this.hasGeneratorActivity) || !templateProcess.connected)
                     return;
 
                 this.logger.error(`Child process for template '${this.fileName}' did not start any activity within the specified amount of time. Disconnecting.`);
@@ -60,6 +61,7 @@ export class TemplateProcess {
 
         return new Promise((resolve, reject) => {
             templateProcess.on('error', (err: Error) => {
+                this.logger.verbose(`Error on template process for '${this.fileName}': ${err}.`);
                 return reject(err);
             });
 
@@ -73,31 +75,35 @@ export class TemplateProcess {
             });
 
             templateProcess.on('disconnect', () => {
-                // The process has disconnected. Most likely because we disconnected in manageActiveProcess().
+                // The process has disconnected. Most likely because we disconnected in monitorActiveTemplateProcess().
                 this.logger.verbose(`Template process for '${this.fileName}' has disconnected.`);             
                 resolve();
             });
 
             templateProcess.on('message', (m: IProcessMessage) => {
-                if (!this.hasTemplateActivity) {
-                    // We (most likely) received a 'processStarted' message. This message is sent when the single-instance Generator is created by the template process.
-                    // It is exported as a single instance by the templating package so we should receive it only once.                    
-                    this.logger.verbose(`Template process for '${this.fileName}' has started.`);
-                    this.hasTemplateActivity = true;
-                    this.monitorActiveTemplateProcess(templateProcess);
+                // The first process message is (most likely) a 'processStarted' message. This message is sent when the single-instance Generator is created by the template process.
+                // It is exported as a single instance by the templating package so we should receive it only once.
+                this.hasSeenProcessMessages = true;
+
+                if (m.log) {                    
+                    this.logger.log(m.log.message, m.log.level);
                 }
+                if (!m.cmd) 
+                    return; // this was a log-only message
+
+                let isGeneratorActivity = false;
+                this.logger.verbose(`Received event '${m.cmd}' from template '${this.fileName}'. GenerateCount: ${this.generateCount}. Template activity: ${this.hasSeenProcessMessages}.`);
                 switch (m.cmd) {
                     case 'generateStarted':
-                        this.hasTemplateActivity = true;
+                        isGeneratorActivity = true;
                         this.generateCount++;
-                        // this.logger.verbose(`Received generateStarted message. Generate count: ${this.generateCount}.`)
                         break;
                     case 'generateFinished':
+                        isGeneratorActivity = true;
                         this.generateCount--;
-                        // this.logger.verbose(`Received generateFinished message. Generate count: ${this.generateCount}.`)
                         break;
                     case 'getModel':
-                        this.hasTemplateActivity = true;
+                        isGeneratorActivity = true;
                         // The template requested the configured model. If there is one, it is already loaded (and cached) at this point.
                         if (this.modelData == null) {
                             this.logger.warn(`Template '${this.fileName}' has no configured model. Please check the code generation config.`);
@@ -108,6 +114,16 @@ export class TemplateProcess {
                     default:
                         break;
                 }
+
+                if (isGeneratorActivity && !this.hasGeneratorActivity) {
+                    // This is the first generator activity: start monitoring.
+                      
+                    this.logger.verbose(`Start monitoring template process for '${this.fileName}'.`);
+                    this.hasGeneratorActivity = true;
+                    this.monitorActiveTemplateProcess(templateProcess);
+                    // setTimeout(() => {
+                    // }, ACTIVE_PROCESS_POLL_INTERVAL); // gives a double interval the first time (between 'processStarted' and the first 'generateStarted')
+                }
             });
         });
     }
@@ -115,8 +131,9 @@ export class TemplateProcess {
     private monitorActiveTemplateProcess(templateProcess: any): void {                
         // Monitor the child process.            
         var intervalId = setInterval(() => {
-            // this.logger.verbose(`Checking child process for template '${this.fileName}'. Connected ${templateProcess.connected}, generateCount: ${this.generateCount}`);
+            this.logger.verbose(`Checking child process for template '${this.fileName}'. Connected ${templateProcess.connected}, generateCount: ${this.generateCount}`);
             if (!templateProcess.connected) {
+                this.logger.verbose(`Lost connection with template process for '${this.fileName}'.`);
                 clearInterval(intervalId); // the process has already stopped
                 return;
             }
@@ -124,6 +141,7 @@ export class TemplateProcess {
             let shouldDisconnect = this.generateCount === 0;
             if (shouldDisconnect) {
                 if (templateProcess.connected) {
+                    this.logger.verbose(`Disconnecting template process for '${this.fileName}'.`);
                     templateProcess.disconnect(); // this will trigger a 'disconnect' event that we handle in run()
                 }
                 clearInterval(intervalId);               
@@ -143,7 +161,9 @@ export class TemplateProcess {
         // Determine the working directory of the template process. This must be the directory in which the template resides, so that
         // paths relative to the template are resolved correctly.
         const workingDir = path.dirname(this.fileName);
-        const options = { env: process.env, silent: false, execArgv: execArgv, cwd: workingDir };
+        // const inheritIO = [0, 1, 2, 'ipc']; // equivalent to [process.stdin, process.stdout, process.stderr] or 'inherit'
+        // const pipeIO = ['pipe', 'pipe', 'pipe']; // default
+        const options = { env: process.env, silent: false, execArgv: execArgv, cwd: workingDir};
         const processArgs: string[] = [];
         if (this.templateArgs) {
             processArgs.push('--templateArgs');

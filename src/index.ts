@@ -78,7 +78,9 @@ args.forEach((val, index, array) => {
 /**
  * Well, a logger.... one that logs to the console...
  */
-const logger = new ConsoleLogger(console, logLevel);
+ const logger = new ConsoleLogger(console, logLevel);
+// const logger = new ConsoleLogger(console, logLevel, true); // include timestamps
+
 /**
  * Stores the template- and model info, and their relations.
  */
