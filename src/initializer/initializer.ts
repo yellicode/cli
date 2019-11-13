@@ -74,7 +74,7 @@ export class Initializer {
                 return Initializer.createCodeGenConfigFile(workingDir, initConfig.templateFileName, modelFileName);
             })
             .then(() => {
-                const dependencies: string[] = ['@yellicode/templating'];
+                const dependencies: string[] = ['@yellicode/core', '@yellicode/templating'];
                 if (!isJsonModel){
                     dependencies.push('@yellicode/elements');
                 }
@@ -111,7 +111,8 @@ export class Initializer {
 
     private static createTemplateFileForJsonModel(workingDir: string, templateFileName: string, outputFileName: string, modelFileName: string): Promise<void> {
   // Note: escape a `, { and } as \`, \{ and \} respectively
-  const template = `import { Generator, TextWriter } from '@yellicode/templating';  
+  const template = `import { TextWriter } from '@yellicode/core';
+import { Generator } from '@yellicode/templating';
           
 Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, model: any) => {
     writer.writeLine(\`Output from template '${templateFileName}' with JSON model '${modelFileName}', generated at $\{new Date().toISOString()\}.\`);      
@@ -131,7 +132,8 @@ Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: Text
     private static createTemplateFile(workingDir: string, templateFileName: string, outputFileName: string): Promise<void> {
 
         // Note: escape a `, { and } as \`, \{ and \} respectively
-        const template = `import { Generator, TextWriter } from '@yellicode/templating';
+        const template = `import { TextWriter } from '@yellicode/core';
+import { Generator } from '@yellicode/templating';        
 import * as elements from '@yellicode/elements';
         
 Generator.generateFromModel({ outputFile: './${outputFileName}' }, (writer: TextWriter, model: elements.Model) => {
