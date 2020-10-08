@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2019 Yellicode
+* Copyright (c) 2020 Yellicode
 *
 * This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,12 @@
 * 
 * Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.
 */
+/**
+* Contains the current version of this meta model. Note that the meta model version is independent
+* from versions of packages that depend on the meta model.
+*/
+export const MetaVersion = '0.1.1';
+
 export type ElementType = "taggedValueSpecification"|"stereotypeExtension"|"class"|"stereotype"|"property"|"package"|"profile"|"dataType"|"primitiveType"|"parameter"|"operation"|"model"|"literalUnlimitedNatural"|"literalString"|"literalReal"|"literalNull"|"literalInteger"|"literalBoolean"|"interfaceRealization"|"interface"|"generalization"|"enumerationLiteral"|"enumeration"|"documentReference"|"document"|"comment"|"association";
 
 /**
@@ -51,6 +57,10 @@ export interface ElementData {
 * via the use of a StringExpression.
 */
 export interface NamedElementData extends ElementData {
+	/**
+	* If true, using this element should be avoided, typically because it has been superseded.
+	*/
+	isDeprecated: boolean;
 	/**
 	* The name of the NamedElement.
 	*/

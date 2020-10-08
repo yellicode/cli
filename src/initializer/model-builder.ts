@@ -5,48 +5,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import * as model from '../data-interfaces';
-import { UniqueId } from '@yellicode/core'; 
+import * as elements from '../data-interfaces';
+import { UniqueId } from '@yellicode/core';
 
 export class ModelBuilder {
-    public static buildSampleModel(modelName: string): model.DocumentData {
-        const model: model.ModelData = {
+    public static buildSampleModel(modelName: string): elements.DocumentData {
+        const modelData: elements.ModelData = {
             elementType: "model",
-            id: UniqueId.create(),
+            id: UniqueId.create(6),
             name: modelName
-        } as model.ModelData;
+        } as elements.ModelData;
 
-        model.packagedElements = [ModelBuilder.createSampleClass()];
+        modelData.packagedElements = [ModelBuilder.createSampleClass()];
 
         return {
-            id: UniqueId.create(),
+            id: UniqueId.create(6),
             creator: "Yellicode CLI",
             modelTypeName: "Yellicode YML",
-            modelTypeVersion: "0.1.8",
-            model: model
+            modelTypeVersion: elements.MetaVersion,
+            model: modelData
         }
     }
 
-     private static createSampleClass(): model.PackageableElementData {
-        const sampleClass: model.ClassData = {
+     private static createSampleClass(): elements.PackageableElementData {
+        const sampleClass: elements.ClassData = {
             elementType: "class",
-            id: UniqueId.create(),
+            id: UniqueId.create(6),
             visibility: "public",
             name: 'Class1',
             ownedComments: ModelBuilder.createComment('This is a sample class.')
-        } as model.ClassData;
+        } as elements.ClassData;
 
         // Add an attribute
-        const sampleAttribute1: model.PropertyData = {
+        const sampleAttribute1: elements.PropertyData = {
             elementType: "property",
             id: UniqueId.create(),
             visibility: "public",
             name: 'StringProperty',
             type: 'string_id', // the built-in string type
             ownedComments: ModelBuilder.createComment('This is a sample string property.')
-        } as model.PropertyData;
+        } as elements.PropertyData;
 
-        const sampleAttribute2: model.PropertyData = {
+        const sampleAttribute2: elements.PropertyData = {
             elementType: "property",
             id: UniqueId.create(),
             visibility: "public",
@@ -54,18 +54,18 @@ export class ModelBuilder {
             type: 'integer_id', // the built-in int type,
             upperValue: this.createInfiniteUnlimitedNaturalData(),
             ownedComments: ModelBuilder.createComment('This is a sample int collection property.')
-        } as model.PropertyData;
+        } as elements.PropertyData;
 
         sampleClass.ownedAttributes = [sampleAttribute1, sampleAttribute2];
         return sampleClass;
     }
 
-    private static createComment(body: string): model.CommentData[] | null {
+    private static createComment(body: string): elements.CommentData[] | null {
         if (!body || body.length === 0) return null;
-        return [{ elementType: "comment", body: body } as model.CommentData];
+        return [{ elementType: "comment", body: body } as elements.CommentData];
     }
 
-    private static createInfiniteUnlimitedNaturalData(): model.ValueSpecificationData {
-        return { elementType: "literalUnlimitedNatural", value: "*" } as model.LiteralUnlimitedNaturalData;
-    }    
+    private static createInfiniteUnlimitedNaturalData(): elements.ValueSpecificationData {
+        return { elementType: "literalUnlimitedNatural", value: "*" } as elements.LiteralUnlimitedNaturalData;
+    }
 }

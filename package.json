@@ -18,7 +18,7 @@
     "url": "github:yellicode/cli.git"
   },
   "dependencies": {
-    "@yellicode/core": "^1.1.3",
+    "@yellicode/core": "^1.3.0",
     "chokidar": "^2.0.4",
     "json-parser": "^1.1.5",
     "lock": "^0.1.3",
