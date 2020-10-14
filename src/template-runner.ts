@@ -66,8 +66,8 @@ export class TemplateRunner {
     }
 
     /**
-     * 
-     * @param fileName The full path to the template file. The path can have a .js or .ts extension. 
+     *
+     * @param fileName The full path to the template file. The path can have a .js or .ts extension.
      */
     public runTemplatesUsingTemplateFile(fileName: string, requireRecompilation: boolean): Promise<void> {
         if (!fileName)
@@ -76,7 +76,7 @@ export class TemplateRunner {
         fileName = fileName.toLowerCase();
 
         // Ensure a .js extension, not .ts or anything else. This may be the case where fileName is passed as a command line argument.
-        fileName = PathUtility.ensureJsExtension(fileName);       
+        fileName = PathUtility.ensureJsExtension(fileName);
 
         // Lookup the template info
         var templateInfos = this.configStore.listAllTemplateUsingTemplateFile(fileName);
@@ -123,13 +123,13 @@ export class TemplateRunner {
                     this.runningTemplates[ti.id] = ti;
                     templatesToRun.push(ti);
                 }
-                // If a template doesn't exist, yield an error and don't include it                
+                // If a template doesn't exist, yield an error and don't include it
                 else this.logger.error(`Template file '${ti.originalTemplateFile}' not found.`);
             }
         });
 
         if (templatesToRun.length === 0) {
-            // All templates are already running. This might happen if multiple file changes 
+            // All templates are already running. This might happen if multiple file changes
             // are triggered within a very short timespan.
             return Promise.resolve();
         }
@@ -149,25 +149,25 @@ export class TemplateRunner {
             return Promise.resolve<ICompileResult>({ success: true });
 
         const templatesToCompile = _.filter(templates, t => t.requiresCompilation && !t.isCompiled);
-        
+
         if (templatesToCompile.length === 0) {
             this.logger.verbose(`Not compiling templates because all templates are up to date.`);
             return Promise.resolve<ICompileResult>({ success: true });
-        }     
-        
+        }
+
         let templateFiles = templatesToCompile.map(ti => { return ti.originalTemplateFile; });
         // If multiple instances of a template file are configured (which is ok), templatesToCompile contains multiple TemplateInfos pointing
-        // to the same file. Note: do not filter templatesToCompile, because we update isCompiled for each instance.            
+        // to the same file. Note: do not filter templatesToCompile, because we update isCompiled for each instance.
         templateFiles = _.uniqBy(templateFiles, f => {return f.toLowerCase();});
 
         let compilerPromise: Promise<ICompileResult>;
         const templateLoggingInfo = templateFiles.length === 1 ? `template file '${templateFiles[0]}'` : `${templateFiles.length} template files`;
-        const tsConfigPath = typeScriptConfig.typeScriptConfigFile;        
+        const tsConfigPath = typeScriptConfig.typeScriptConfigFile;
         if (tsConfigPath != null && fs.existsSync(tsConfigPath)) {
-            this.logger.info(`Compiling ${templateLoggingInfo} using TypeScript configuration ${tsConfigPath}...`);            
+            this.logger.info(`Compiling ${templateLoggingInfo} using TypeScript configuration ${tsConfigPath}...`);
             compilerPromise = this.compiler.compileWithTsConfigFile(templateFiles, tsConfigPath);
         } else {
-            this.logger.info(`Compiling ${templateLoggingInfo} using default TypeScript configuration...`);            
+            this.logger.info(`Compiling ${templateLoggingInfo} using default TypeScript configuration...`);
             compilerPromise = this.compiler.compile(templateFiles);
         }
         return compilerPromise.then((result) => {
@@ -223,6 +223,6 @@ export class TemplateRunner {
 
         const templateProcess = new TemplateProcess(fileName, model, this.logger, this.enableDebugging, templateInfo.templateArgs, templateInfo.outputMode);
         this.logger.verbose(`Running template '${fileName}'...`);
-        return templateProcess.run();
+        return templateProcess.run(templateInfo.connectionTimeout);
     }
 }

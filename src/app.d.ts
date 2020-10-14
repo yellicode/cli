@@ -9,9 +9,10 @@ interface CodeGenTemplateConfig {
     templateFile: string;
     modelFile?: string;
     debug?: boolean;
-    templateArgs?: any;    
+    templateArgs?: any;
     disable?: boolean;
     outputMode?: 'overwrite' | 'once' | 'append';
+    connectionTimeout?: number;
 }
 
 interface CodeGenConfig {
@@ -24,9 +25,13 @@ interface CodeGenConfig {
 
 interface ITemplateInfo {
     /**
-     * Gets an internally assigned unique id.  
+     * Gets an internally assigned unique id.
      */
     id: string;
+    /**
+     * Allows to override the default connection timeout.
+     */
+    connectionTimeout?: number;
     /**
      * Indicates from which config file the template info was read.
      */
@@ -37,8 +42,8 @@ interface ITemplateInfo {
      */
     templateFile: string;
     /**
-    * The full path to the original template file. This can be a path with a .js extension and a .ts extension.    
-    * the originalTemplateFile is the one that is watched for changes.   
+    * The full path to the original template file. This can be a path with a .js extension and a .ts extension.
+    * the originalTemplateFile is the one that is watched for changes.
     */
     originalTemplateFile: string;
     /**
@@ -55,7 +60,7 @@ interface ITemplateInfo {
      */
     isCompiled: boolean;
     /**
-     * When debugging and no debug target was specified, the first template info that has debug:true will be used 
+     * When debugging and no debug target was specified, the first template info that has debug:true will be used
      * as debug target. Other templates will be ignored.
      */
     debug: boolean;

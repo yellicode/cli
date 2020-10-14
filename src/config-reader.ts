@@ -44,7 +44,7 @@ export class ConfigReader {
                 }
             });
         });
-    }    
+    }
 
     public readDirectory(dirName: string, recursive: boolean, autoRun: boolean): Promise<void> {
         return this.readDirectoryInternal(dirName, recursive, autoRun)
@@ -64,7 +64,7 @@ export class ConfigReader {
                             this.logger.info(`Config file '${path}' has been added`);
                             this.readFile(path, true, autoRun)
                                 .catch((err) => {
-                                    // Even watch te file in case of errors, the user may fix it                                
+                                    // Even watch te file in case of errors, the user may fix it
                                     this.logger.error(err);
                                 })
                                 .then(() => {
@@ -86,7 +86,7 @@ export class ConfigReader {
                     this.logger.warn(`No config files found in directory '${dirName}'.`);
                     return resolve(configFiles || []);
                 }
-    
+
                 this.logger.verbose(`Found ${configFiles.length} config files in directory '${dirName}'.`);
                 this.logger.verbose(`Config files: ${configFiles.join(', ')}`);
                 var numberOfFilesToRead: number = configFiles.length;
@@ -102,12 +102,12 @@ export class ConfigReader {
                                 resolve(configFiles);
                             }
                         });
-                });            
+                });
             });
-        })      
+        })
     }
 
-    private onConfigFileRead(fileContents: string, configFileName: string, isFirstTime: boolean, autoRun: boolean) {        
+    private onConfigFileRead(fileContents: string, configFileName: string, isFirstTime: boolean, autoRun: boolean) {
         const config: CodeGenConfig = jsonparser.parse(fileContents, null, true); // parse... true to remove comments
         if (!config || !config.templates)
             return;
@@ -151,9 +151,9 @@ export class ConfigReader {
             }
 
             // The configured file name is always relative to the config file. Make this a full path.
-            //let originalTemplateFileName: string = path.join(dirName, configuredTemplatePath).toLowerCase(); // can be .ts or .js                
+            //let originalTemplateFileName: string = path.join(dirName, configuredTemplatePath).toLowerCase(); // can be .ts or .js
             // UPDATE: try not to change the case of the originalTemplateFileName, so that the the compiler creates files with the same casing
-            let originalTemplateFileName: string = path.join(dirName, configuredTemplatePath); // can be .ts or .js                
+            let originalTemplateFileName: string = path.join(dirName, configuredTemplatePath); // can be .ts or .js
             // The templateFileName should always have a .js extension
             const templateFileName: string = isTypeScriptTemplate ? PathUtility.ensureJsExtension(originalTemplateFileName) : originalTemplateFileName;
             // If TS compilation is not enabled, don't deal with .ts files and always use the .js file (compilation is assumed to be done externally)
@@ -169,12 +169,13 @@ export class ConfigReader {
                 isCompiled: false,
                 debug: templateEntry.debug || false,
                 templateArgs: templateEntry.templateArgs,
-                outputMode: templateEntry.outputMode
+                outputMode: templateEntry.outputMode,
+                connectionTimeout: templateEntry.connectionTimeout
             };
 
             // Get the model file (optional)
             if (templateEntry.modelFile) {
-                // Ensure a '.ymn' extension                    
+                // Ensure a '.ymn' extension
                 let configuredModelPath: string = templateEntry.modelFile;
                 const modelExtension = path.extname(configuredModelPath);
                 if (!modelExtension || (modelExtension !== consts.YELLICODE_DOCUMENT_EXTENSION && modelExtension !== '.json')) {
@@ -182,8 +183,8 @@ export class ConfigReader {
                 }
                 // Make an absolute path
                 templateInfo.modelFile = path.join(dirName, configuredModelPath).toLowerCase();
-            }          
-            
+            }
+
             this.configStore.addTemplate(templateInfo);
         });
 

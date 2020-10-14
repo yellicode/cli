@@ -12,7 +12,7 @@ import * as semver from 'semver';
 import { Logger } from '@yellicode/core';
 import { IProcessMessage, ISetModelMessage } from '@yellicode/core';
 
-const PROCESS_START_TIMEOUT = 5000;
+const DEFAULT_CONNECTION_TIMEOUT = 5000;
 const ACTIVE_PROCESS_POLL_INTERVAL = 500;
 const DEFAULT_DEBUG_PORT_LEGACY = 5858;
 const DEFAULT_DEBUG_PORT_INSPECTOR = 9229;
@@ -32,7 +32,7 @@ export class TemplateProcess {
 
     }
 
-    static initialise() {        
+    static initialise() {
         // The legacy debugger has been deprecated as of Node 7.7.0 (https://nodejs.org/en/docs/guides/debugging-getting-started/).
         // The inspector protocol is supported as of Node >= 6.3, but only v6.14.2 understands the --inspect-brk flag.
         if (semver.lt(process.version, '6.14.2')) {
@@ -45,18 +45,19 @@ export class TemplateProcess {
         }
     }
 
-    public run(): Promise<void> {
+    public run(connectionTimeout?: number): Promise<void> {
         const templateProcess = this.createTemplateProcess();
+        const timeOut = connectionTimeout || DEFAULT_CONNECTION_TIMEOUT;
 
         // Give the process some time to get started. For example, the timeout will expire if the user never imports the Generator at all.
-        if (!this.enableDebugging) { // when debugging, the user needs time to attach to the child process   
+        if (!this.enableDebugging) { // when debugging, the user needs time to attach to the child process
             setTimeout(() => {
                 if ((this.hasSeenProcessMessages && this.hasGeneratorActivity) || !templateProcess.connected)
                     return;
 
-                this.logger.error(`Child process for template '${this.fileName}' did not start any activity within the specified amount of time. Disconnecting.`);
+                this.logger.error(`Child process for template '${this.fileName}' did not start any activity within the ${timeOut}ms. Disconnecting.`);
                 templateProcess.disconnect();
-            }, PROCESS_START_TIMEOUT);
+            }, timeOut);
         }
 
         return new Promise((resolve, reject) => {
@@ -76,7 +77,7 @@ export class TemplateProcess {
 
             templateProcess.on('disconnect', () => {
                 // The process has disconnected. Most likely because we disconnected in monitorActiveTemplateProcess().
-                this.logger.verbose(`Template process for '${this.fileName}' has disconnected.`);             
+                this.logger.verbose(`Template process for '${this.fileName}' has disconnected.`);
                 resolve();
             });
 
@@ -85,10 +86,10 @@ export class TemplateProcess {
                 // It is exported as a single instance by the templating package so we should receive it only once.
                 this.hasSeenProcessMessages = true;
 
-                if (m.log) {                    
+                if (m.log) {
                     this.logger.log(m.log.message, m.log.level);
                 }
-                if (!m.cmd) 
+                if (!m.cmd)
                     return; // this was a log-only message
 
                 let isGeneratorActivity = false;
@@ -117,7 +118,7 @@ export class TemplateProcess {
 
                 if (isGeneratorActivity && !this.hasGeneratorActivity) {
                     // This is the first generator activity: start monitoring.
-                      
+
                     this.logger.verbose(`Start monitoring template process for '${this.fileName}'.`);
                     this.hasGeneratorActivity = true;
                     this.monitorActiveTemplateProcess(templateProcess);
@@ -128,8 +129,8 @@ export class TemplateProcess {
         });
     }
 
-    private monitorActiveTemplateProcess(templateProcess: any): void {                
-        // Monitor the child process.            
+    private monitorActiveTemplateProcess(templateProcess: any): void {
+        // Monitor the child process.
         var intervalId = setInterval(() => {
             this.logger.verbose(`Checking child process for template '${this.fileName}'. Connected ${templateProcess.connected}, generateCount: ${this.generateCount}`);
             if (!templateProcess.connected) {
@@ -144,19 +145,19 @@ export class TemplateProcess {
                     this.logger.verbose(`Disconnecting template process for '${this.fileName}'.`);
                     templateProcess.disconnect(); // this will trigger a 'disconnect' event that we handle in run()
                 }
-                clearInterval(intervalId);               
+                clearInterval(intervalId);
             }
         }, ACTIVE_PROCESS_POLL_INTERVAL);
     }
 
     private createTemplateProcess(): any {
         var execArgv = [];
-        
+
         if (this.enableDebugging) {
             // If this process is in debug mode, the forked process will also use process.execArgv - and the same debug port 5858 -. This would result
             // in a "childprocess.fork EADDRINUSE :::5858." So, for debug mode we need to assign a port for each child process.
             const debugArg = this.getDebugProcessArg();
-            execArgv.push(debugArg);            
+            execArgv.push(debugArg);
         }
         // Determine the working directory of the template process. This must be the directory in which the template resides, so that
         // paths relative to the template are resolved correctly.
@@ -168,7 +169,7 @@ export class TemplateProcess {
         if (this.templateArgs) {
             processArgs.push('--templateArgs');
             processArgs.push(JSON.stringify(this.templateArgs));
-        }        
+        }
         if (this.outputMode){
             processArgs.push('--outputMode');
             processArgs.push(this.outputMode);
@@ -176,17 +177,17 @@ export class TemplateProcess {
         return childProcess.fork(this.fileName, processArgs, options);
     }
 
-    private getDebugProcessArg(): string {        
+    private getDebugProcessArg(): string {
         const debugPort = ++TemplateProcess.debugPort;
         let arg: string;
 
         // The inspector protocol is supported as of Node >= 6.3.
         // The legacy debugger has been deprecated as of Node 7.7.0 (https://nodejs.org/en/docs/guides/debugging-getting-started/).
-        // 'debug-brk' and 'inspect-brk' stops the process at the first line until a debugger is attached  
+        // 'debug-brk' and 'inspect-brk' stops the process at the first line until a debugger is attached
         if (TemplateProcess.useLegacyDebugProtocol) {
-            // legacy: the original V8 Debugger Protocol 
+            // legacy: the original V8 Debugger Protocol
             this.logger.warn(`Using the legacy V8 debugger protocol because the current node.js version is ${process.version}.`);
-            arg = `--debug-brk=${debugPort}`; 
+            arg = `--debug-brk=${debugPort}`;
         }
         else {
             // inspector: the new V8 Inspector Protocol
