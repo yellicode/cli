@@ -12,7 +12,7 @@ jobs:
           node-version: 10
       - run : cd api-cli
       - run: npm install
-      - run: npm test
+      - run: npm test 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v2
         env:
