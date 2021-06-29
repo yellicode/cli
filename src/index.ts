@@ -1,5 +1,4 @@
-﻿#!/usr/bin/env node
-/*
+﻿/*
  * Copyright (c) 2019 Yellicode
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -115,10 +114,13 @@ function errorHandler(err: any) {
 
 const workingDirectory = path.resolve(".");
 
-function start() {
+export function start() {
     const recursive = false; // recursively searches the working dir for codegenconfig.json files. Enable if needed and when fully tested.    
     logger.info(`Yellicode is starting in working directory ${workingDirectory}.`);
+    
+
     logger.verbose(`Template debugging: ${debugTemplate}. Watching: ${watch}.`);
+
 
     configReader.readDirectory(workingDirectory, recursive, false)
         .then(() => {
