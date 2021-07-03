@@ -23,12 +23,11 @@ Generator.generateFromModel(
     cls.initializeClass(
       "PanacloudStack",
       () => {
-        
         appsync.initializeAppsync("api");
         ts.writeLine();
         lambda.initializeLambda("todoLambda");
         ts.writeLine();
-        appsync.lambdaDataSource("lambdaDs", "lambda");
+        appsync.lambdaDataSource("lambdaDs", "lambdaFn");
         ts.writeLine();
         for (var key in model?.type?.Query) {
           appsync.lambdaDataSourceResolverQuery(key);
@@ -40,7 +39,7 @@ Generator.generateFromModel(
         ts.writeLine();
         db.initializeDynamodb("todoTable");
         ts.writeLine();
-        db.grantFullAccess("lambda");
+        db.grantFullAccess("lambdaFn");
         ts.writeLine();
         lambda.addEnvironment("TODOS_TABLE", "table.tableName");
         ts.writeLine();

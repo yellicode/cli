@@ -22,8 +22,15 @@ Object.keys(jsonObj.type.Mutation).forEach((key) => {
       if (key.includes("create") || key.includes("add")) {
         db.addQuery(key);
       }
-      if (key.includes("delete") || key.includes("remove")) {
+      if (
+        key.includes("delete") ||
+        key.includes("remove") ||
+        key.includes("cancel")
+      ) {
         db.deleteQuery(key);
+      }
+      if (key.includes("update")) {
+        db.updateQuery(key);
       }
     }
   );

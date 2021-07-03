@@ -4,7 +4,7 @@ import { TypeScriptWriter } from "@yellicode/typescript";
 export class Lambda extends CodeWriter {
   public initializeLambda(name: string) {
     this
-      .writeLineIndented(` const lambda = new lambda.Function(this, "${name}", {
+      .writeLineIndented(` const lambdaFn = new lambda.Function(this, "${name}", {
         functionName: "${name}",
         runtime: lambda.Runtime.NODEJS_12_X,
         handler: "main.handler",
@@ -17,6 +17,6 @@ export class Lambda extends CodeWriter {
     ts.writeImports("@aws-cdk/aws-lambda", "lambda");
   }
   public addEnvironment(name: string, value: string) {
-    this.writeLine(`lambda.addEnvironment("${name}", ${value});`);
+    this.writeLine(`lambdaFn.addEnvironment("${name}", ${value});`);
   }
 }

@@ -1,6 +1,6 @@
-import { expect, test  } from "@oclif/test";
+import { expect, test } from "@oclif/test";
 
-describe("create:api", () => { 
+describe("create:api", () => {
   // test
   //   .stdout()
   //   .command(["create:api", "-t", "demoOne"])
@@ -9,10 +9,10 @@ describe("create:api", () => {
   //     expect(output).to.contain("Git repository cloned");
   //     expect(output).to.contain("Done");
   //   });
-    // test
-    // .stdout()
-    // .command(["create:api"])
-    // .it("runs create:api", (ctx) => {
-    //    expect(ctx.stdout).to.contain("Please Enter Your API Name")
-    // })
+  // test
+  // .stdout()
+  // .command(["create:api"])
+  // .it("runs create:api", (ctx) => {
+  //    expect(ctx.stdout).to.contain("Please Enter Your API Name")
+  // })
 });

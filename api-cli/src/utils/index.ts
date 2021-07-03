@@ -6,6 +6,8 @@ import { TemplateRunner } from "../../../src/template-runner";
 import { InputWatcher } from "../../../src/input-watcher";
 import { ConfigReader } from "../../../src/config-reader";
 import { Compiler } from "../../../src/compiler";
+const exec = require("await-exec");
+
 /**
  * True to let the user/IDE attach a debugger to the template child process.
  */
@@ -80,7 +82,7 @@ function errorHandler(err: any) {
 
 const workingDirectory = path.resolve(".");
 
-export function start() {
+export async function start() {
   const recursive = false; // recursively searches the working dir for codegenconfig.json files. Enable if needed and when fully tested.
   logger.info(
     `Panacloud is starting in working directory ${workingDirectory}.`
@@ -88,10 +90,11 @@ export function start() {
 
   logger.verbose(`Template debugging: ${debugTemplate}. Watching: ${watch}.`);
 
-  configReader
+  await configReader
     .readDirectory(workingDirectory, recursive, false)
     .then(() => {
-      templateRunner.runAll().then(() => {
+      templateRunner.runAll().then(async () => {
+        await exec(`npx prettier --write .`);
         process.exit(); // not watching, so exit
       }, errorHandler);
     })

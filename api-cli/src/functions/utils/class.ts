@@ -6,7 +6,7 @@ export class BasicClass extends CodeWriter {
     const ts = new TypeScriptWriter(output);
     const classDefinition: ClassDefinition = {
       name: name,
-      extends: ["cdk.stack"],
+      extends: ["cdk.Stack"],
       export: true,
     };
     ts.writeClassBlock(classDefinition, () => {

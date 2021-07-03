@@ -1,8 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import { start } from "../../utils/index";
-var rimraf = require("rimraf");
 const fs = require("fs");
-var Git = require("nodegit");
 const exec = require("await-exec");
 const convert = require("graphql-to-json-converter");
 
@@ -23,7 +21,10 @@ export default class Hello extends Command {
       `mkdir panacloud && cd panacloud && cdk init --language=typescript`
     );
     this.log("CDK init DONE");
-
+    this.log("Installing packages");
+    await exec(
+      `cd panacloud && npm i @aws-cdk/aws-appsync @aws-cdk/aws-dynamodb @aws-cdk/aws-lambda`
+    );
     this.log("GQL copy from path to destination");
     await exec(`cd panacloud && mkdir graphql`);
     fs.copyFile(
@@ -47,6 +48,7 @@ export default class Hello extends Command {
     this.log("Converting DONE");
 
     this.log("Yellicode run");
-    start();
+    await start();
+    this.log("Fromatting");
   }
 }

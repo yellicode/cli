@@ -1,1 +1,43 @@
-{"type":{"Todo":{"id":{"type":"ID","array":false,"required":true},"name":{"type":"String","array":false,"required":true}},"Query":{"listTodos":{"type":"Todo","array":true,"required":false}},"Mutation":{"createTodo":{"args":{"Todo":{"type":"TodoInput","array":false,"required":true}},"type":"Todo","array":false,"required":false},"deleteTodo":{"args":{"TodoId":{"type":"String","array":false,"required":true}},"type":"String","array":false,"required":false}}},"input":{"TodoInput":{"id":{"type":"ID","array":false,"required":true},"name":{"type":"String","array":false,"required":true}}}}
+{
+  "type": {
+    "Todo": {
+      "id": { "type": "ID", "array": false, "required": true },
+      "name": { "type": "String", "array": false, "required": true }
+    },
+    "Query": {
+      "listTodos": { "type": "Todo", "array": true, "required": false }
+    },
+    "Mutation": {
+      "createTodo": {
+        "args": {
+          "Todo": { "type": "TodoInput", "array": false, "required": true }
+        },
+        "type": "Todo",
+        "array": false,
+        "required": false
+      },
+      "deleteTodo": {
+        "args": {
+          "TodoId": { "type": "String", "array": false, "required": true }
+        },
+        "type": "String",
+        "array": false,
+        "required": false
+      },
+      "updateTodo": {
+        "args": {
+          "todo": { "type": "TodoInput", "array": false, "required": true }
+        },
+        "type": "Todo",
+        "array": false,
+        "required": false
+      }
+    }
+  },
+  "input": {
+    "TodoInput": {
+      "id": { "type": "ID", "array": false, "required": true },
+      "name": { "type": "String", "array": false, "required": true }
+    }
+  }
+}

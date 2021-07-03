@@ -24,7 +24,7 @@ export class DynamoDB extends CodeWriter {
     this.writeLineIndented(`const AWS = require('aws-sdk');
     const docClient = new AWS.DynamoDB.DocumentClient();
     
-    async function ${name}() {
+    export async function ${name}() {
         const params = {
             TableName: process.env.TODOS_TABLE,
         }
@@ -37,7 +37,6 @@ export class DynamoDB extends CodeWriter {
         }
     }
     
-    export default ${name}
     `);
   }
   public addQuery(name: string) {
@@ -45,7 +44,7 @@ export class DynamoDB extends CodeWriter {
     const AWS = require('aws-sdk');
     const docClient = new AWS.DynamoDB.DocumentClient();
 
-async function ${name}(todo: Todo) {
+    export async function ${name}(todo: Todo) {
     const params = {
         TableName: process.env.TODOS_TABLE,
         Item: todo
@@ -58,15 +57,13 @@ async function ${name}(todo: Todo) {
         return null;
     }
 }
-
-export default ${name};
-    `);
+   `);
   }
   public deleteQuery(name: string) {
     this.writeLineIndented(`const AWS = require('aws-sdk');
     const docClient = new AWS.DynamoDB.DocumentClient();
     
-    async function ${name}(TodoId: String) {
+    export async function ${name}(TodoId: String) {
         const params = {
             TableName: process.env.TODOS_TABLE,
             Key: {
@@ -81,8 +78,53 @@ export default ${name};
             return null
         }
     }
+    `);
+  }
+  public updateQuery(name: string) {
+    this.writeLineIndented(`const AWS = require('aws-sdk');
+    const docClient = new AWS.DynamoDB.DocumentClient();
     
-    export default ${name};`
-    );
+    type Params = {
+        TableName: string | undefined,
+        Key: string | {},
+        ExpressionAttributeValues: any,
+        ExpressionAttributeNames: any,
+        UpdateExpression: string,
+        ReturnValues: string
+    }
+    
+    export async function ${name}(todo: any) {
+        let params: Params = {
+            TableName: process.env.TODOS_TABLE,
+            Key: {
+                id: todo.id
+            },
+            ExpressionAttributeValues: {},
+            ExpressionAttributeNames: {},
+            UpdateExpression: "",
+            ReturnValues: "UPDATED_NEW"
+        };
+        let prefix = "set ";
+        let attributes = Object.keys(todo);
+        for (let i = 0; i < attributes.length; i++) {
+            let attribute = attributes[i];
+            if (attribute !== "id") {
+                params["UpdateExpression"] += prefix + "#" + attribute + " = :" + attribute;
+                params["ExpressionAttributeValues"][":" + attribute] = todo[attribute];
+                params["ExpressionAttributeNames"]["#" + attribute] = attribute;
+                prefix = ", ";
+            }
+        }
+    
+        try {
+            await docClient.update(params).promise()
+            return todo
+        } catch (err) {
+            console.log('DynamoDB error: ', err)
+            return null
+        }
+    }
+    
+    `);
   }
 }
