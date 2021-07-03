@@ -3,6 +3,10 @@
     {
       "templateFile": "./src/codeGenerator/class/index.ts",
       "modelFile": "model.json"
+    },
+    {
+      "templateFile": "./src/codeGenerator/lambda/initializeLambdaFunction.ts",
+      "modelFile": "model.json"
     }
   ],
   "compileTypeScript": true

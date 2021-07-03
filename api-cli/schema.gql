@@ -11,3 +11,8 @@ input TodoInput {
 type Query {
   listTodos: [Todo]
 }
+
+type Mutation {
+  createTodo(Todo: TodoInput!): Todo
+  deleteTodo(TodoId: String!): String
+}

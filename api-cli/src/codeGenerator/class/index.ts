@@ -23,10 +23,7 @@ Generator.generateFromModel(
     cls.initializeClass(
       "PanacloudStack",
       () => {
-        ts.writeLineIndented(` 
-        constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
-            super(scope, id, props);
-        `);
+        
         appsync.initializeAppsync("api");
         ts.writeLine();
         lambda.initializeLambda("todoLambda");
@@ -47,7 +44,6 @@ Generator.generateFromModel(
         ts.writeLine();
         lambda.addEnvironment("TODOS_TABLE", "table.tableName");
         ts.writeLine();
-        ts.writeLineIndented(`}`);
       },
       output
     );
