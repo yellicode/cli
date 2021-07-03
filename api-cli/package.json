@@ -17,13 +17,21 @@
     "await-exec": "^0.1.2",
     "child_process": "^1.0.2",
     "fs": "0.0.1-security",
+    "gql-to-json-schema": "^1.0.1",
+    "graphql-to-json-converter": "^1.2.0",
+    "i": "^0.3.6",
     "inquirer": "^8.1.1",
     "nodegit": "^0.27.0",
+    "npm": "^7.19.0",
     "ora": "^5.3.0",
     "semantic-release": "^17.3.8",
     "tslib": "^1.14.1"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "1.21.3",
+    "@graphql-codegen/typescript": "1.21.1",
+    "@graphql-codegen/typescript-operations": "1.17.15",
+    "@graphql-codegen/typescript-react-apollo": "2.2.3",
     "@oclif/dev-cli": "^1.26.0",
     "@oclif/test": "^1.2.8",
     "@types/chai": "^4.2.14",
@@ -68,7 +76,8 @@
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "mocha  \"test/**/*.test.ts\" --exit",
     "version": "oclif-dev readme",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "codegen": "graphql-codegen --config codegen.yml"
   },
   "publishConfig": {
     "access": "public",

@@ -1,0 +1,7 @@
+overwrite: true
+schema: "panacloud/graphql/schema.graphql"
+generates:
+  panacloud/lambda-fns/types.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"

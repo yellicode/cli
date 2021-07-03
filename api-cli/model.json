@@ -1,0 +1,1 @@
+{"type":{"Todo":{"id":{"type":"ID","array":false,"required":true},"name":{"type":"String","array":false,"required":true}},"Query":{"listTodos":{"type":"Todo","array":true,"required":false}}},"input":{"TodoInput":{"id":{"type":"ID","array":false,"required":true},"name":{"type":"String","array":false,"required":true}}}}

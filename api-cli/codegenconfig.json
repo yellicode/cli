@@ -1,10 +1,9 @@
 {
-    "templates": [
-        {
-            "templateFile": "./quickstart.template.ts"
-        }
-    ],
-    "compileTypeScript": true
+  "templates": [
+    {
+      "templateFile": "./src/codeGenerator/class/index.ts",
+      "modelFile": "model.json"
+    }
+  ],
+  "compileTypeScript": true
 }
-
-
