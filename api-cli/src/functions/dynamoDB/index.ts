@@ -19,4 +19,70 @@ export class DynamoDB extends CodeWriter {
   public grantFullAccess(lambda: string) {
     this.writeLine(`table.grantFullAccess(${lambda});`);
   }
+
+  public listQuery(name: string) {
+    this.writeLineIndented(`const AWS = require('aws-sdk');
+    const docClient = new AWS.DynamoDB.DocumentClient();
+    
+    async function ${name}() {
+        const params = {
+            TableName: process.env.TODOS_TABLE,
+        }
+        try {
+            const data = await docClient.scan(params).promise()
+            return data.Items
+        } catch (err) {
+            console.log('DynamoDB error: ', err)
+            return null
+        }
+    }
+    
+    export default ${name}
+    `);
+  }
+  public addQuery(name: string) {
+    this.writeLineIndented(`
+    const AWS = require('aws-sdk');
+    const docClient = new AWS.DynamoDB.DocumentClient();
+
+async function ${name}(todo: Todo) {
+    const params = {
+        TableName: process.env.TODOS_TABLE,
+        Item: todo
+    }
+    try {
+        await docClient.put(params).promise();
+        return todo;
+    } catch (err) {
+        console.log('DynamoDB error: ', err);
+        return null;
+    }
+}
+
+export default ${name};
+    `);
+  }
+  public deleteQuery(name: string) {
+    this.writeLineIndented(`const AWS = require('aws-sdk');
+    const docClient = new AWS.DynamoDB.DocumentClient();
+    
+    async function ${name}(TodoId: String) {
+        const params = {
+            TableName: process.env.TODOS_TABLE,
+            Key: {
+              id: TodoId
+            }
+        }
+        try {
+            await docClient.delete(params).promise()
+            return TodoId
+        } catch (err) {
+            console.log('DynamoDB error: ', err)
+            return null
+        }
+    }
+    
+    export default ${name};`
+    );
+  }
 }

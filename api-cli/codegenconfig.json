@@ -7,6 +7,9 @@
     {
       "templateFile": "./src/codeGenerator/lambda/initializeLambdaFunction.ts",
       "modelFile": "model.json"
+    },
+    {
+      "templateFile": "./src/codeGenerator/lambda/individualFunction.ts"
     }
   ],
   "compileTypeScript": true

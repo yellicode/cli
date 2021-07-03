@@ -13,6 +13,9 @@ Generator.generateFromModel(
       lambda.importIndividualFunction(output, key, `./${key}`);
     }
 
+    for (var key in model.type.Mutation) {
+      lambda.importIndividualFunction(output, key, `./${key}`);
+    }
     ts.writeLine();
     ts.writeLineIndented(`
     type Event = {
