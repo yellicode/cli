@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@yellicode/core": "^1.3.0",
-    "chokidar": "^2.0.4",
+    "chokidar": "^3.6.0",
     "json-parser": "^1.1.5",
     "lock": "^0.1.3",
     "lodash": "^4.17.15",
